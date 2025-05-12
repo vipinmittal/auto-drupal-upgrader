@@ -242,12 +242,17 @@ class DrupalUpgrader
     
         $composerJson->write($config);
     
+        // Remove composer.lock to force update
+        if (file_exists('composer.lock')) {
+            unlink('composer.lock');
+        }
+    
         // Run composer update with specific flags to force update
         $this->io->write('Running composer update for core packages...');
         $updateCommand = array_merge(
             ['composer', 'update'],
             $corePackages,
-            ['--with-all-dependencies', '--prefer-dist', '--no-cache']
+            ['--with-dependencies', '--prefer-dist', '--no-cache', '--no-dev', '--ignore-platform-reqs']
         );
         
         $process = new Process($updateCommand);
@@ -263,7 +268,7 @@ class DrupalUpgrader
     
         // Run a second update for remaining dependencies
         $this->io->write('Running composer update for remaining dependencies...');
-        $process = new Process(['composer', 'update', '--with-all-dependencies']);
+        $process = new Process(['composer', 'update', '--with-dependencies', '--no-dev', '--ignore-platform-reqs']);
         $process->setTimeout(3600);
         $process->setWorkingDirectory($this->workingDir);
         $process->run(function ($type, $buffer) {
