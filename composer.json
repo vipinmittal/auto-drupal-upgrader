@@ -1,5 +1,5 @@
 {
-    "name": "drupal/drupal-upgrader",
+    "name": "vipinmittal/drupal-upgrader",
     "description": "Composer plugin for automated Drupal version upgrades",
     "type": "composer-plugin",
     "license": "GPL-2.0-or-later",
