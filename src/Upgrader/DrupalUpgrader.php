@@ -218,6 +218,82 @@ class DrupalUpgrader
         $composerJson = new JsonFile('composer.json');
         $config = $composerJson->read();
 
+        // Convert version to constraint
+        $versionConstraint = '^' . $targetVersion;
+
+        // Update core packages
+        $corePackages = [
+            'drupal/core-recommended',
+            'drupal/core-composer-scaffold',
+            'drupal/core-project-message'
+        ];
+
+        foreach ($corePackages as $package) {
+            if (isset($config['require'][$package])) {
+                $config['require'][$package] = $versionConstraint;
+            }
+        }
+
+        // Update contrib modules if enabled
+        if ($this->config['upgrade_contrib_modules']) {
+            foreach ($config['require'] as $package => $version) {
+                if (strpos($package, 'drupal/') === 0 && !in_array($package, $corePackages)) {
+                    $config['require'][$package] = $this->getCompatibleVersion($package, $targetVersion);
+                }
+            }
+        }
+
+        $composerJson->write($config);
+
+        // Run composer update
+        $this->io->write('Running composer update...');
+        $process = new Process(['composer', 'update', '--with-dependencies']);
+        $process->run(function ($type, $buffer) {
+            $this->io->write($buffer, false);
+        });
+    }
+
+    protected function getCompatibleVersion($package, $version)
+    {
+        // Convert version number to major version constraint
+        $major = $this->getMajorVersion($version);
+        return "^$major.0";
+    }
+
+    protected function getMajorVersion($version)
+    {
+        // Remove the caret and any other constraints
+        $version = trim(str_replace('^', '', $version));
+        // Get only the first part of the version number
+        $parts = explode('.', $version);
+        return (int) $parts[0];
+    }
+
+    protected function determineUpgradePath($currentMajor)
+    {
+        $path = [];
+        
+        // Add intermediate versions if needed
+        if ($currentMajor < 10) {
+            $path[] = '9.5.0';
+            $path[] = '10.0.0';
+        } elseif ($currentMajor === 10) {
+            $path[] = '10.1.0';
+        }
+        
+        // Add final target version
+        if ($currentMajor < 11) {
+            $path[] = '11.0.0';
+        }
+
+        return $path;
+    }
+
+    protected function updateDependencies($targetVersion)
+    {
+        $composerJson = new JsonFile('composer.json');
+        $config = $composerJson->read();
+
         // Update core packages
         $corePackages = [
             'drupal/core-recommended',
@@ -257,50 +333,5 @@ class DrupalUpgrader
         // For now, we'll use a simple major version match
         $coreMajor = $this->getMajorVersion($coreVersion);
         return "^$coreMajor.0";
-    }
-
-    protected function getMajorVersion($version)
-    {
-        return (int) $this->versionParser->normalize($version);
-    }
-
-    protected function backupProject()
-    {
-        $this->io->write('Creating backup...');
-        $backupDir = sprintf('%s/backup_%s', dirname($this->workingDir), date('Y-m-d_H-i-s'));
-        $process = new Process(['cp', '-r', $this->workingDir, $backupDir]);
-        $process->run();
-
-        if ($process->isSuccessful()) {
-            $this->io->write(sprintf('Backup created at: %s', $backupDir));
-        } else {
-            throw new \RuntimeException('Failed to create backup');
-        }
-    }
-
-    protected function displayCompatibilityIssues($issues)
-    {
-        $this->io->write('\n<error>Compatibility Issues Found:</error>');
-        foreach ($issues as $issue) {
-            $this->io->write(sprintf('- %s', $issue));
-        }
-        $this->io->write('');
-    }
-
-    protected function runPostUpdateChecks()
-    {
-        $this->io->write('Running post-update checks...');
-        
-        // Run database updates
-        $process = new Process(['vendor/bin/drush', 'updatedb', '-y']);
-        $process->run(function ($type, $buffer) {
-            $this->io->write($buffer, false);
-        });
-
-        // Clear caches
-        $process = new Process(['vendor/bin/drush', 'cache:rebuild', '-y']);
-        $process->run(function ($type, $buffer) {
-            $this->io->write($buffer, false);
-        });
     }
 }
