@@ -1,24 +1,24 @@
 {
     "name": "vipinmittal/drupal-upgrader",
-    "description": "Composer plugin for automated Drupal version upgrades",
+    "description": "Automated Drupal upgrade plugin for Composer",
     "type": "composer-plugin",
     "license": "GPL-2.0-or-later",
     "require": {
         "composer-plugin-api": "^2.0",
-        "drupal/core-recommended": "^9.0 || ^10.0 || ^11.0",
-        "drupal/upgrade_status": "^4.0",
-        "phpstan/phpstan": "^1.0",
-        "mglaman/phpstan-drupal": "^1.0"
+        "php": ">=7.4",
+        "symfony/process": "^5.4",
+        "symfony/console": "^5.4"
     },
     "require-dev": {
-        "composer/composer": "^2.0"
+        "composer/composer": "^2.0",
+        "phpunit/phpunit": "^9.0"
     },
     "autoload": {
         "psr-4": {
-            "Drupal\\DrupalUpgrader\\": "src/"
+            "Drupal\\UpgradeAutomation\\": "src/"
         }
     },
     "extra": {
-        "class": "Drupal\\DrupalUpgrader\\Plugin\\Composer\\DrupalUpgraderPlugin"
+        "class": "Drupal\\UpgradeAutomation\\Plugin"
     }
-}
+} 
