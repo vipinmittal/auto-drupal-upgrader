@@ -1,0 +1,16 @@
+{
+    "skip_compatibility_checks": false,
+    "auto_fix_dependencies": true,
+    "backup_before_upgrade": true,
+    "upgrade_contrib_modules": true,
+    "upgrade_custom_modules": true,
+    "phpstan_level": 5,
+    "ignore_paths": [
+        "web/modules/custom/legacy_module"
+    ],
+    "version_constraints": {
+        "9": "^9.5",
+        "10": "^10.1",
+        "11": "^11.0"
+    }
+}
