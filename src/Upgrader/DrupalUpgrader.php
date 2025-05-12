@@ -32,7 +32,6 @@ class DrupalUpgrader
         $this->config = [
             'skip_compatibility_checks' => false,
             'auto_fix_dependencies' => true,
-            'backup_before_upgrade' => true,
             'upgrade_contrib_modules' => true,
             'upgrade_custom_modules' => true,
             'phpstan_level' => 5,
@@ -117,11 +116,6 @@ class DrupalUpgrader
         }
 
         try {
-            // Backup if enabled
-            if ($this->config['backup_before_upgrade']) {
-                $this->backupProject();
-            }
-
             // Run pre-upgrade checks
             $this->io->write('Running pre-upgrade compatibility checks...');
             $compatibilityIssues = $this->runCompatibilityChecks();
@@ -218,23 +212,25 @@ class DrupalUpgrader
     {
         $composerJson = new JsonFile('composer.json');
         $config = $composerJson->read();
-
+    
         // Convert version to constraint
         $versionConstraint = '^' . $targetVersion;
-
+    
         // Update core packages
         $corePackages = [
             'drupal/core-recommended',
             'drupal/core-composer-scaffold',
-            'drupal/core-project-message'
+            'drupal/core-project-message',
+            'drupal/core'
         ];
-
+    
+        // Force update core packages
         foreach ($corePackages as $package) {
             if (isset($config['require'][$package])) {
                 $config['require'][$package] = $versionConstraint;
             }
         }
-
+    
         // Update contrib modules if enabled
         if ($this->config['upgrade_contrib_modules']) {
             foreach ($config['require'] as $package => $version) {
@@ -243,22 +239,37 @@ class DrupalUpgrader
                 }
             }
         }
-
+    
         $composerJson->write($config);
-
-        // Run composer update with specific packages and force flag
-        $this->io->write('Running composer update...');
+    
+        // Run composer update with specific flags to force update
+        $this->io->write('Running composer update for core packages...');
         $updateCommand = array_merge(
             ['composer', 'update'],
             $corePackages,
-            ['--with-dependencies', '--prefer-dist', '--no-cache', '--no-dev']
+            ['--with-all-dependencies', '--prefer-dist', '--update-with-dependencies', '--no-cache']
         );
+        
         $process = new Process($updateCommand);
         $process->setTimeout(3600); // Set timeout to 1 hour
+        $process->setWorkingDirectory($this->workingDir);
         $process->run(function ($type, $buffer) {
             $this->io->write($buffer, false);
         });
-
+    
+        if (!$process->isSuccessful()) {
+            throw new \RuntimeException('Composer update failed: ' . $process->getErrorOutput());
+        }
+    
+        // Run a second update for remaining dependencies
+        $this->io->write('Running composer update for remaining dependencies...');
+        $process = new Process(['composer', 'update', '--with-all-dependencies']);
+        $process->setTimeout(3600);
+        $process->setWorkingDirectory($this->workingDir);
+        $process->run(function ($type, $buffer) {
+            $this->io->write($buffer, false);
+        });
+    
         if (!$process->isSuccessful()) {
             throw new \RuntimeException('Composer update failed: ' . $process->getErrorOutput());
         }
