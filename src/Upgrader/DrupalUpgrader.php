@@ -242,20 +242,9 @@ class DrupalUpgrader
     
         $composerJson->write($config);
     
-        // Remove composer.lock to force update
-        if (file_exists('composer.lock')) {
-            unlink('composer.lock');
-        }
-    
-        // Run composer update with specific flags to force update
-        $this->io->write('Running composer update for core packages...');
-        $updateCommand = array_merge(
-            ['composer', 'update'],
-            $corePackages,
-            ['--with-dependencies', '--prefer-dist', '--no-cache', '--no-dev', '--ignore-platform-reqs']
-        );
-        
-        $process = new Process($updateCommand);
+        // First run a full composer update to generate the lock file
+        $this->io->write('Running initial composer update...');
+        $process = new Process(['composer', 'update', '--no-dev']);
         $process->setTimeout(3600); // Set timeout to 1 hour
         $process->setWorkingDirectory($this->workingDir);
         $process->run(function ($type, $buffer) {
@@ -263,12 +252,18 @@ class DrupalUpgrader
         });
     
         if (!$process->isSuccessful()) {
-            throw new \RuntimeException('Composer update failed: ' . $process->getErrorOutput());
+            throw new \RuntimeException('Initial composer update failed: ' . $process->getErrorOutput());
         }
     
-        // Run a second update for remaining dependencies
-        $this->io->write('Running composer update for remaining dependencies...');
-        $process = new Process(['composer', 'update', '--with-dependencies', '--no-dev', '--ignore-platform-reqs']);
+        // Now update core packages
+        $this->io->write('Running composer update for core packages...');
+        $updateCommand = array_merge(
+            ['composer', 'update'],
+            $corePackages,
+            ['--with-dependencies', '--prefer-dist', '--no-dev']
+        );
+        
+        $process = new Process($updateCommand);
         $process->setTimeout(3600);
         $process->setWorkingDirectory($this->workingDir);
         $process->run(function ($type, $buffer) {
