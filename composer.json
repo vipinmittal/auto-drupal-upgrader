@@ -1,0 +1,25 @@
+{
+    "name": "drupal/drupal-upgrader",
+    "description": "Composer plugin for automated Drupal version upgrades",
+    "type": "composer-plugin",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "php": ">=8.1",
+        "composer-plugin-api": "^2.0",
+        "drupal/core-recommended": "^9.0 || ^10.0 || ^11.0",
+        "drupal/upgrade_status": "^4.0",
+        "phpstan/phpstan": "^1.0",
+        "mglaman/phpstan-drupal": "^1.0"
+    },
+    "require-dev": {
+        "composer/composer": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Drupal\\DrupalUpgrader\\": "src/"
+        }
+    },
+    "extra": {
+        "class": "Drupal\\DrupalUpgrader\\Plugin\\Composer\\DrupalUpgraderPlugin"
+    }
+}
