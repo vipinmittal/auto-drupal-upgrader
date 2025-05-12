@@ -247,7 +247,7 @@ class DrupalUpgrader
         $updateCommand = array_merge(
             ['composer', 'update'],
             $corePackages,
-            ['--with-all-dependencies', '--prefer-dist', '--update-with-dependencies', '--no-cache']
+            ['--with-all-dependencies', '--prefer-dist', '--no-cache']
         );
         
         $process = new Process($updateCommand);
