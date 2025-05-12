@@ -246,9 +246,14 @@ class DrupalUpgrader
 
         $composerJson->write($config);
 
-        // Run composer update
+        // Run composer update with specific packages and force flag
         $this->io->write('Running composer update...');
-        $process = new Process(['composer', 'update', '--with-dependencies']);
+        $updateCommand = array_merge(
+            ['composer', 'update'],
+            $corePackages,
+            ['--with-dependencies', '--prefer-dist', '--no-cache', '--no-dev']
+        );
+        $process = new Process($updateCommand);
         $process->setTimeout(3600); // Set timeout to 1 hour
         $process->run(function ($type, $buffer) {
             $this->io->write($buffer, false);
