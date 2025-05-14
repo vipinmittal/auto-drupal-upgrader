@@ -164,4 +164,36 @@ class VersionManager
     {
         return $this->targetVersion;
     }
+
+    /**
+     * Gets the upgrade path.
+     */
+    public function getUpgradePath()
+    {
+        // If we already have a target version, we've already determined the path
+        if (!$this->targetVersion) {
+            return $this->determineUpgradePath();
+        }
+        
+        // Re-determine the path to return it
+        $currentMajor = $this->getMajorVersion($this->currentVersion);
+        $targetMajor = $this->getMajorVersion($this->targetVersion);
+        
+        $path = [];
+        
+        if ($currentMajor === 9) {
+            $path[] = '9.5.0'; // Latest stable D9
+            if ($targetMajor >= 10) {
+                $path[] = '10.0.0';
+            }
+        }
+        
+        if ($currentMajor === 10 || (isset($path) && end($path) === '10.0.0')) {
+            if ($targetMajor >= 11) {
+                $path[] = '11.0.0';
+            }
+        }
+        
+        return $path;
+    }
 }

@@ -120,7 +120,8 @@ class DrupalUpgrader
      */
     public function executeUpgrade()
     {
-        $upgradePath = $this->versionManager->getUpgradePath();
+        // Change this line from getUpgradePath() to determineUpgradePath()
+        $upgradePath = $this->versionManager->determineUpgradePath();
         
         if (empty($upgradePath)) {
             throw new \RuntimeException('No upgrade path determined. Run planUpgrade() first.');
