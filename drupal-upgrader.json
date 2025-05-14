@@ -1,0 +1,10 @@
+{
+    "skip_compatibility_checks": false,
+    "auto_fix_dependencies": true,
+    "upgrade_contrib_modules": true,
+    "upgrade_custom_modules": true,
+    "phpstan_level": 5,
+    "ignore_paths": [],
+    "dry_run": false,
+    "verbose": true
+}
