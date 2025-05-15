@@ -1,6 +1,6 @@
 {
     "name": "vipinmittal/drupal-upgrader",
-    "description": "Composer plugin to automate Drupal upgrades from 9 to 10 and 11",
+    "description": "Composer plugin to automate Drupal upgrades and updates from 9 to 10 and 11",
     "type": "composer-plugin",
     "license": "GPL-2.0-or-later",
     "require": {
@@ -9,7 +9,8 @@
         "drupal/core": "^9 || ^10 || ^11",
         "drush/drush": "^10 || ^11 || ^12",
         "symfony/process": "^4.4 || ^5.0 || ^6.0",
-        "symfony/console": "^4.4 || ^5.0 || ^6.0"
+        "symfony/console": "^4.4 || ^5.0 || ^6.0",
+        "symfony/filesystem": "^4.4 || ^5.0 || ^6.0"
     },
     "require-dev": {
         "composer/composer": "^2.0",

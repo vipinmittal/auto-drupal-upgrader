@@ -13,6 +13,7 @@ class CommandProvider implements CommandProviderCapability
     {
         return [
             new UpgradeCommand(),
+            new AutoUpdateCommand(),
         ];
     }
 }
